@@ -7,7 +7,7 @@ function App() {
   return (
     <>
   <div>
-    <p>Alici CD</p>
+    <p>Ali CicD</p>
   </div>
     </>
   )
