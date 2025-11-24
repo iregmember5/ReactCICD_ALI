@@ -1,41 +1,47 @@
-name: Deploy React App
+name: CI/CD Deploy React App
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger on pushes to main branch
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      # Step 1: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
-      - name: Build app
+      # Step 4: Build React app
+      - name: Build React app
         run: npm run build
 
-      - name: Deploy to VPS and reload Apache
+      # Step 5: Deploy to VPS and reload Apache
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
+            echo "Deploying React app..."
             cd /var/www/ReactCICD_ALI
-            # Remove old build
+            # Remove old build folder
             rm -rf dist
-            # Copy new build
-            cp -r ./dist /var/www/ReactCICD_ALI/
-            # Reload Apache to apply any configuration changes
+            # Copy new build from GitHub Actions workspace
+            cp -r $GITHUB_WORKSPACE/dist ./dist
+            # Reload Apache to apply changes
             systemctl reload apache2
-            echo "Deployment + Apache reload completed successfully."
+            echo "Deployment completed successfully!"
