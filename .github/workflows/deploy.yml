@@ -3,7 +3,7 @@ name: Deploy React App
 on:
   push:
     branches:
-      - main  # change if your default branch is different
+      - main
 
 jobs:
   build-and-deploy:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -24,7 +24,7 @@ jobs:
       - name: Build app
         run: npm run build
 
-      - name: Deploy to VPS
+      - name: Deploy to VPS and reload Apache
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -32,7 +32,10 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           script: |
             cd /var/www/ReactCICD_ALI
-            git reset --hard
-            git pull origin main
-            npm install
-            npm run build
+            # Remove old build
+            rm -rf dist
+            # Copy new build
+            cp -r ./dist /var/www/ReactCICD_ALI/
+            # Reload Apache to apply any configuration changes
+            systemctl reload apache2
+            echo "Deployment + Apache reload completed successfully."
